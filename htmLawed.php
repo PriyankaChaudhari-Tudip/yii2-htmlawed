@@ -117,9 +117,9 @@ class htmLawed extends \yii\helpers\Inflector {
 	    $t = strtr($t, $x);
 	}
 	if ($C['cdata'] or $C['comment']) {
-	    $t = preg_replace_callback('`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', 'hl_cmtcd', $t);
+	    $t = preg_replace_callback('`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', array('\serhatozles\htmlawed\htmLawed', 'hl_cmtcd'), $t);
 	}
-	$t = preg_replace_callback('`&amp;([A-Za-z][A-Za-z0-9]{1,30}|#(?:[0-9]{1,8}|[Xx][0-9A-Fa-f]{1,7}));`', 'hl_ent', str_replace('&', '&amp;', $t));
+	$t = preg_replace_callback('`&amp;([A-Za-z][A-Za-z0-9]{1,30}|#(?:[0-9]{1,8}|[Xx][0-9A-Fa-f]{1,7}));`', array('\serhatozles\htmlawed\htmLawed', 'hl_ent'), str_replace('&', '&amp;', $t));
 	if ($C['unique_ids'] && !isset($GLOBALS['hl_Ids'])) {
 	    $GLOBALS['hl_Ids'] = array();
 	}
@@ -130,10 +130,10 @@ class htmLawed extends \yii\helpers\Inflector {
 	    $GLOBALS[$C['show_setting']] = array('config' => $C, 'spec' => $S, 'time' => microtime());
 	}
 // main
-	$t = preg_replace_callback('`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', 'hl_tag', $t);
-	$t = $C['balance'] ? hl_bal($t, $C['keep_bad'], $C['parent']) : $t;
+	$t = preg_replace_callback('`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', array('\serhatozles\htmlawed\htmLawed', 'hl_tag'), $t);
+	$t = $C['balance'] ? self::hl_bal($t, $C['keep_bad'], $C['parent']) : $t;
 	$t = (($C['cdata'] or $C['comment']) && strpos($t, "\x01") !== false) ? str_replace(array("\x01", "\x02", "\x03", "\x04", "\x05"), array('', '', '&', '<', '>'), $t) : $t;
-	$t = $C['tidy'] ? hl_tidy($t, $C['tidy'], $C['parent']) : $t;
+	$t = $C['tidy'] ? self::hl_tidy($t, $C['tidy'], $C['parent']) : $t;
 	unset($C, $e);
 	if (isset($reC)) {
 	    $GLOBALS['C'] = $reC;
@@ -145,7 +145,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_attrval($t, $p) {
+    public static function hl_attrval($t, $p) {
 // check attr val against $S
 	$o = 1;
 	$l = strlen($t);
@@ -206,7 +206,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_bal($t, $do = 1, $in = 'div') {
+    public static function hl_bal($t, $do = 1, $in = 'div') {
 // balance tags
 // by content
 	$cB = array('blockquote' => 1, 'form' => 1, 'map' => 1, 'noscript' => 1); // Block
@@ -470,7 +470,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_cmtcd($t) {
+    public static function hl_cmtcd($t) {
 // comment/CDATA sec handler
 	$t = $t[0];
 	global $C;
@@ -492,7 +492,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_ent($t) {
+    public static function hl_ent($t) {
 // entitity handler
 	global $C;
 	$t = $t[1];
@@ -508,7 +508,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_prot($p, $c = null) {
+    public static function hl_prot($p, $c = null) {
 // check URL scheme
 	global $C;
 	$b = $a = '';
@@ -553,7 +553,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_regex($p) {
+    public static function hl_regex($p) {
 // ?regex
 	if (empty($p)) {
 	    return 0;
@@ -581,7 +581,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_spec($t) {
+    public static function hl_spec($t) {
 // final $spec
 	$s = array();
 	$t = str_replace(array("\t", "\r", "\n", ' '), '', preg_replace_callback('/"(?>(`.|[^"])*)"/sm', create_function('$m', 'return substr(str_replace(array(";", "|", "~", " ", ",", "/", "(", ")", \'`"\'), array("\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", "\""), $m[0]), 1, -1);'), trim($t)));
@@ -614,10 +614,10 @@ class htmLawed extends \yii\helpers\Inflector {
 		    }
 		    $y[$x][strtolower(substr($m, 0, $p))] = str_replace(array("\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08"), array(";", "|", "~", " ", ",", "/", "(", ")"), substr($m, $p + 1));
 		}
-		if (isset($y[$x]['match']) && !hl_regex($y[$x]['match'])) {
+		if (isset($y[$x]['match']) && !self::hl_regex($y[$x]['match'])) {
 		    unset($y[$x]['match']);
 		}
-		if (isset($y[$x]['nomatch']) && !hl_regex($y[$x]['nomatch'])) {
+		if (isset($y[$x]['nomatch']) && !self::hl_regex($y[$x]['nomatch'])) {
 		    unset($y[$x]['nomatch']);
 		}
 	    }
@@ -640,7 +640,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_tag($t) {
+    public static function hl_tag($t) {
 // tag/attribute handler
 	global $C;
 	$t = $t[0];
@@ -661,7 +661,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // tag transform
 	static $eD = array('applet' => 1, 'center' => 1, 'dir' => 1, 'embed' => 1, 'font' => 1, 'isindex' => 1, 'menu' => 1, 's' => 1, 'strike' => 1, 'u' => 1); // Deprecated
 	if ($C['make_tag_strict'] && isset($eD[$e])) {
-	    $trt = hl_tag2($e, $a, $C['make_tag_strict']);
+	    $trt = self::hl_tag2($e, $a, $C['make_tag_strict']);
 	    if (!$e) {
 		return (($C['keep_bad'] % 2) ? str_replace(array('<', '>'), array('&lt;', '&gt;'), $t) : '');
 	    }
@@ -758,11 +758,11 @@ class htmLawed extends \yii\helpers\Inflector {
 			static $sC = array('&#x20;' => ' ', '&#32;' => ' ', '&#x45;' => 'e', '&#69;' => 'e', '&#x65;' => 'e', '&#101;' => 'e', '&#x58;' => 'x', '&#88;' => 'x', '&#x78;' => 'x', '&#120;' => 'x', '&#x50;' => 'p', '&#80;' => 'p', '&#x70;' => 'p', '&#112;' => 'p', '&#x53;' => 's', '&#83;' => 's', '&#x73;' => 's', '&#115;' => 's', '&#x49;' => 'i', '&#73;' => 'i', '&#x69;' => 'i', '&#105;' => 'i', '&#x4f;' => 'o', '&#79;' => 'o', '&#x6f;' => 'o', '&#111;' => 'o', '&#x4e;' => 'n', '&#78;' => 'n', '&#x6e;' => 'n', '&#110;' => 'n', '&#x55;' => 'u', '&#85;' => 'u', '&#x75;' => 'u', '&#117;' => 'u', '&#x52;' => 'r', '&#82;' => 'r', '&#x72;' => 'r', '&#114;' => 'r', '&#x4c;' => 'l', '&#76;' => 'l', '&#x6c;' => 'l', '&#108;' => 'l', '&#x28;' => '(', '&#40;' => '(', '&#x29;' => ')', '&#41;' => ')', '&#x20;' => ':', '&#32;' => ':', '&#x22;' => '"', '&#34;' => '"', '&#x27;' => "'", '&#39;' => "'", '&#x2f;' => '/', '&#47;' => '/', '&#x2a;' => '*', '&#42;' => '*', '&#x5c;' => '\\', '&#92;' => '\\');
 			$v = strtr($v, $sC);
 		    }
-		    $v = preg_replace_callback('`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS', 'hl_prot', $v);
+		    $v = preg_replace_callback('`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS', array('\serhatozles\htmlawed\htmLawed', 'hl_prot'), $v);
 		    $v = !$C['css_expression'] ? preg_replace('`expression`i', ' ', preg_replace('`\\\\\S|(/|(%2f))(\*|(%2a))`i', ' ', $v)) : $v;
 		} elseif (isset($aNP[$k]) or strpos($k, 'src') !== false or $k[0] == 'o') {
 		    $v = str_replace("\xad", ' ', (strpos($v, '&') !== false ? str_replace(array('&#xad;', '&#173;', '&shy;'), ' ', $v) : $v));
-		    $v = hl_prot($v, $k);
+		    $v = self::hl_prot($v, $k);
 		    if ($k == 'href') { // X-spam
 			if ($C['anti_mail_spam'] && strpos($v, 'mailto:') === 0) {
 			    $v = str_replace('@', htmlspecialchars($C['anti_mail_spam']), $v);
@@ -788,7 +788,7 @@ class htmLawed extends \yii\helpers\Inflector {
 			}
 		    }
 		}
-		if (isset($rl[$k]) && is_array($rl[$k]) && ($v = hl_attrval($v, $rl[$k])) === 0) {
+		if (isset($rl[$k]) && is_array($rl[$k]) && ($v = self::hl_attrval($v, $rl[$k])) === 0) {
 		    continue;
 		}
 		$a[$k] = str_replace('"', '&quot;', $v);
@@ -915,7 +915,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_tag2(&$e, &$a, $t = 1) {
+    public static function hl_tag2(&$e, &$a, $t = 1) {
 // transform tag
 	if ($e == 'center') {
 	    $e = 'div';
@@ -956,7 +956,7 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_tidy($t, $w, $p) {
+    public static function hl_tidy($t, $w, $p) {
 // Tidy/compact HTM
 	if (strpos(' pre,script,textarea', "$p,")) {
 	    return $t;
@@ -1031,13 +1031,13 @@ class htmLawed extends \yii\helpers\Inflector {
 // eof
     }
 
-    function hl_version() {
+    public static function hl_version() {
 // rel
 	return '1.1.18';
 // eof
     }
 
-    function kses($t, $h, $p = array('http', 'https', 'ftp', 'news', 'nntp', 'telnet', 'gopher', 'mailto')) {
+    public static function kses($t, $h, $p = array('http', 'https', 'ftp', 'news', 'nntp', 'telnet', 'gopher', 'mailto')) {
 // kses compat
 	foreach ($h as $k => $v) {
 	    $h[$k]['n']['*'] = 1;
@@ -1047,11 +1047,11 @@ class htmLawed extends \yii\helpers\Inflector {
 	$C['elements'] = count($h) ? strtolower(implode(',', array_keys($h))) : '-*';
 	$C['hook'] = 'kses_hook';
 	$C['schemes'] = '*:' . implode(',', $p);
-	return htmLawed($t, $C, $h);
+	return self::htmLawed($t, $C, $h);
 // eof
     }
 
-    function kses_hook($t, &$C, &$S) {
+    public static function kses_hook($t, &$C, &$S) {
 // kses compat
 	return $t;
 // eof
